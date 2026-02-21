@@ -28,9 +28,19 @@ library(GGally)
 
 
 ```{r}
-
+diamond$cut <- as.factor(diamond$cut)
+levels(diamond$cut)<-c( "Good","Very Good", "Ideal", "Astor Ideal") 
 ```
 
+```{r}
+diamond$clarity <- as.factor(diamond$clarity)
+levels(diamond$clarity) <- c("SI2", "SI1", "VS2", "VS1", "VVS2", "VVS1", "IF", "FL")
+```
+
+```{r}
+diamond$color <- as.factor(diamond$color)
+levels(diamond$color) <- rev(LETTERS[4:11]) 
+```
 
 
 
