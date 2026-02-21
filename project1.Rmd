@@ -7,13 +7,16 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+diamond <- read.csv("diamonds4.csv")
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(GGally)
 ```
 
 # Project 1: Report
 
-```{r setup, include=FALSE}
-my_data <- read.csv("diamonds4.csv")
-```
+
 
 ## Section 1
 
@@ -22,5 +25,12 @@ my_data <- read.csv("diamonds4.csv")
 
 
 ## Section 3
+
+
+```{r}
+
+```
+
+
 
 
