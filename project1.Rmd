@@ -1,0 +1,26 @@
+---
+title: "project 1"
+author: "Andrew Tran, Shreya Dubey, Joseph Bannon"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Project 1: Report
+
+```{r setup, include=FALSE}
+my_data <- read.csv("diamonds4.csv")
+```
+
+## Section 1
+
+
+## Section 2
+
+
+## Section 3
+
+
