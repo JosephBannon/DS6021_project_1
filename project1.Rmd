@@ -20,6 +20,8 @@ library(MASS)
 
 ## Section 1
 
+## Section 2
+
 ```{r Data Transformation}
 
 diamonds <- diamond %>%
@@ -265,8 +267,6 @@ plot(diamonds_slr)
 
 MASS::boxcox(diamonds_slr)
 ```
-
-## Section 2
 
 
 ## Section 3
