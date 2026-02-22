@@ -12,6 +12,7 @@ library(tidyverse)
 library(ggplot2)
 library(dplyr)
 library(GGally)
+library(MASS)
 ```
 
 # Project 1: Report
@@ -19,6 +20,251 @@ library(GGally)
 
 ## Section 1
 
+```{r Data Transformation}
+
+diamonds <- diamond %>%
+              mutate(color_category = case_when(
+                                        color %in% c("D", "E", "F") ~ "Colorless",
+                                        color %in% c("G", "H", "I", "J") ~ "Near Colorless",
+                                        color == "K" ~ "Faint",
+                                        TRUE ~ "Other"),
+                     clarity_category = case_when(
+                                          clarity %in% c("I1", "I2", "I3") ~ "Included",
+                                          clarity %in% c("SI1", "SI2") ~ "Slightly Included",
+                                          clarity %in% c("VS1", "VS2") ~ "Very Slightly Included",
+                                          clarity %in% c("VVS1", "VVS2") ~ "Very Very Slightly Included",
+                                          clarity %in% c("IF") ~ "Internally Flawless",
+                                          clarity %in% c("FL") ~ "Flawless",
+                                          TRUE ~ "Other"))
+              
+```
+
+```{r}
+# Quick summary stats for diamond dataset variables
+summary(diamonds)
+```
+Carat values range from 0.23 to 7, with a median value of 0.52 and mean value of 0.81.
+
+Price values range from 322 to 355403, with a median value of 1463.5 and mean value of 7056.7.
+
+The range of the numerical variables (carat and price) suggest the presence of outlier values that may skew values of central tendency. 
+
+## Visualizing the Distribution of Numerical Variables
+
+```{r}
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point() +
+   geom_smooth(method = "lm", se=FALSE)
+```
+
+```{r Density Plots}
+diamonds %>%
+  ggplot(aes(price)) +
+  geom_density()
+
+diamonds %>%
+  ggplot(aes(carat)) +
+  geom_density()
+```
+```{r}
+
+# Looking at distribution of smaller carat diamonds (below average)
+diamonds %>% 
+  filter(carat <= median(carat)) %>%
+  ggplot(aes(x = carat)) +
+  geom_histogram(binwidth = 0.01)
+
+# Looking at distribution of larger carat diamonds (above average)
+diamonds %>% 
+  filter(carat >= median(carat)) %>%
+  ggplot(aes(x = carat)) +
+  geom_histogram(binwidth = 0.10)
+```
+
+```{r}
+# Looking at distribution of diamond price (below median)
+diamonds %>% 
+  filter(price <= median(price)) %>%
+  ggplot(aes(x = price)) +
+  geom_histogram(binwidth = 10)
+
+# Looking at distribution of diamond price (above average)
+diamonds %>% 
+  filter(price >= median(price)) %>%
+  ggplot(aes(x = price)) +
+  geom_histogram(binwidth = 10000)
+```
+## Visualizing the Distribution of Categorical Variables
+
+```{r}
+diamonds %>%
+ggplot(aes(x = fct_infreq(cut))) +
+  geom_bar()
+
+diamonds %>%
+  group_by(cut) %>%
+  tally() %>%
+  arrange(desc(n))
+
+diamonds %>%
+ggplot(aes(x = fct_infreq(clarity))) +
+  geom_bar()
+
+diamonds %>%
+  group_by(clarity, clarity_category) %>%
+  tally() %>%
+  arrange(desc(n))
+
+diamonds %>%
+ggplot(aes(x = fct_infreq(color))) +
+  geom_bar()
+
+diamonds %>%
+  group_by(color, color_category) %>%
+  tally() %>%
+  arrange(desc(n))
+
+```
+## Visualizing Relationships
+
+```{r Density Plot: Carat + Categoricals}
+
+diamonds %>%
+ggplot(aes(x = carat, color = cut)) +
+  geom_density(linewidth = 0.75)
+
+diamonds %>%
+ggplot(aes(x = carat, color = clarity)) +
+  geom_density(linewidth = 0.75)
+
+diamonds %>%
+ggplot(aes(x = carat, color = color)) +
+  geom_density(linewidth = 0.75)
+```
+
+```{r Density Plots: Price + Categoricals}
+
+diamonds %>%
+ggplot(aes(x = price, color = cut)) +
+  geom_density(linewidth = 0.75)
+
+diamonds %>%
+ggplot(aes(x = price, color = clarity)) +
+  geom_density(linewidth = 0.75)
+
+diamonds %>%
+ggplot(aes(x = price, color = color)) +
+  geom_density(linewidth = 0.75)
+```
+
+```{r}
+
+diamonds %>%
+ggplot(aes(x = carat, y = price)) +
+  geom_point(aes(color = cut)) +
+   geom_smooth(method = "lm", se=FALSE) +
+  facet_wrap(~clarity_category, ncol = 3)
+
+diamonds %>%
+ggplot(aes(x = carat, y = price)) +
+  geom_point(aes(color = cut)) +
+   geom_smooth(method = "lm", se=FALSE) +
+  facet_wrap(~color_category, ncol = 2)
+```
+
+```{r}
+diamonds %>%
+ggplot(aes(x = carat, y = price)) +
+  geom_point(aes(color = color_category)) +
+  geom_smooth(method = "lm", se=FALSE) +
+  facet_wrap(~cut, ncol = 2)
+
+diamonds %>%
+ggplot(aes(x = carat, y = price)) +
+  geom_point(aes(color = clarity_category)) +
+  geom_smooth(method = "lm", se=FALSE)+
+  facet_wrap(~cut, ncol = 2)
+```
+
+```{r}
+
+# Looking at distribution of smaller carat diamonds (below average)
+diamonds %>% 
+  filter(carat <= median(carat)) %>%
+  ggplot(aes(x = carat)) +
+  geom_histogram(binwidth = 0.01)
+
+# Looking at distribution of larger carat diamonds (above average)
+diamonds %>% 
+  filter(carat >= median(carat)) %>%
+  ggplot(aes(x = carat)) +
+  geom_histogram(binwidth = 0.10)
+```
+
+```{r}
+# Looking at distribution of diamond price (below median)
+diamonds %>% 
+  filter(price <= median(price)) %>%
+  ggplot(aes(x = price)) +
+  geom_histogram(binwidth = 10)
+
+# Looking at distribution of diamond price (above average)
+diamonds %>% 
+  filter(price >= median(price)) %>%
+  ggplot(aes(x = price)) +
+  geom_histogram(binwidth = 10000)
+```
+
+```{r}
+ggplot(diamonds, aes(x = fct_reorder(cut, price, median), y = price)) +
+  geom_boxplot()
+
+ggplot(diamonds, aes(x = fct_reorder(color_category, price, median), y = price)) +
+  geom_boxplot()
+
+ggplot(diamonds, aes(x = fct_reorder(clarity_category, price, median), y = price)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(diamonds, aes(x = fct_reorder(cut, carat, median), y = carat)) +
+  geom_boxplot()
+
+ggplot(diamonds, aes(x = fct_reorder(clarity_category, carat, median), y = carat)) +
+  geom_boxplot()
+
+ggplot(diamonds, aes(x = fct_reorder(color_category, carat, median), y = carat)) +
+  geom_boxplot()
+```
+
+## Looking at Covariation Between Two Categorical Variables
+
+```{r}
+diamonds %>% 
+  count(color, cut) %>%  
+  ggplot(aes(x = color, y = cut)) +
+  geom_tile(aes(fill = n))
+
+diamonds %>% 
+  count(cut, clarity_category) %>%  
+  ggplot(aes(x = cut, y = clarity_category)) +
+  geom_tile(aes(fill = n))
+
+diamonds %>% 
+  count(color_category, clarity_category) %>%  
+  ggplot(aes(x = color_category, y = clarity_category)) +
+  geom_tile(aes(fill = n))
+```
+
+## SLR Model Diagnostics
+
+```{r}
+diamonds_slr <-lm(price~carat, data=diamonds)
+par(mfrow = c(2, 2))
+plot(diamonds_slr)
+
+MASS::boxcox(diamonds_slr)
+```
 
 ## Section 2
 
