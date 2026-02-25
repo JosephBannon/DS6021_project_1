@@ -23,8 +23,7 @@ library(MASS)
 ## Section 2
 
 ```{r Data Transformation}
-
-diamonds <- diamond %>%
+diamonds <- diamonds %>%
               mutate(color_category = case_when(
                                         color %in% c("D", "E", "F") ~ "Colorless",
                                         color %in% c("G", "H", "I", "J") ~ "Near Colorless",
@@ -38,8 +37,11 @@ diamonds <- diamond %>%
                                           clarity %in% c("IF") ~ "Internally Flawless",
                                           clarity %in% c("FL") ~ "Flawless",
                                           TRUE ~ "Other"))
+
+head(diamonds)
               
 ```
+
 
 ```{r}
 # Quick summary stats for diamond dataset variables
@@ -151,11 +153,11 @@ ggplot(aes(x = price, color = cut)) +
   geom_density(linewidth = 0.75)
 
 diamonds %>%
-ggplot(aes(x = price, color = clarity)) +
+ggplot(aes(x = price, color = clarity_category)) +
   geom_density(linewidth = 0.75)
 
 diamonds %>%
-ggplot(aes(x = price, color = color)) +
+ggplot(aes(x = price, color = color_category)) +
   geom_density(linewidth = 0.75)
 ```
 
@@ -190,13 +192,13 @@ ggplot(aes(x = carat, y = price)) +
 
 ```{r}
 
-# Looking at distribution of smaller carat diamonds (below average)
+# Looking at distribution of smaller carat diamonds (below median)
 diamonds %>% 
   filter(carat <= median(carat)) %>%
   ggplot(aes(x = carat)) +
   geom_histogram(binwidth = 0.01)
 
-# Looking at distribution of larger carat diamonds (above average)
+# Looking at distribution of larger carat diamonds (above median)
 diamonds %>% 
   filter(carat >= median(carat)) %>%
   ggplot(aes(x = carat)) +
@@ -265,8 +267,247 @@ diamonds_slr <-lm(price~carat, data=diamonds)
 par(mfrow = c(2, 2))
 plot(diamonds_slr)
 
-MASS::boxcox(diamonds_slr)
+MASS::boxcox(diamonds_slr, lambda = seq(-0.5, 0.5, 1/10))
 ```
+## Variable Transformation and Assumption Testing
+
+```{r}
+
+# Log transformation of y (price)
+diamonds <- diamonds %>%
+              mutate(ystar = log(price))
+
+diamonds_slr_ystar <-lm(ystar~carat, data=diamonds)
+par(mfrow = c(2, 2))
+plot(diamonds_slr_ystar)
+
+# log transformation of x (carat)
+
+diamonds <- diamonds %>%
+              mutate(xstar = log(carat))
+```
+Single Linear Regression for carat and price
+
+```{r}
+diamonds_slr_xystar <-lm(ystar~xstar, data=diamonds)
+par(mfrow = c(2, 2))
+plot(diamonds_slr_xystar)
+
+summary(diamonds_slr_xystar)
+```
+
+## SLR Analysis
+
+### T Test
+
+H0: There is no linear relationship between carat and price.
+H1: There is a linear relationship between carat and price.
+
+t value for carat(log transformed) is 159.8 with a p-value of < 2.2e-16. Null hypothesis is rejected and we can conclude that there is a statistically significant linear relationship between the carat and price.
+
+### ANOVA Testing
+
+```{r ANOVA }
+anova(diamonds_slr_xystar)
+```
+#### Coefficient of Determination
+
+```{r}
+anova.tab<-anova(diamonds_slr_xystar)
+##SST not provided, so we add up SSR and SSres
+SST<-sum(anova.tab$"Sum Sq")
+##R2
+anova.tab$"Sum Sq"[1]/SST
+```
+Proportion of variance in price that can be explained carat is 0.9546863
+
+#### Correlation between Price and Carat
+
+```{r}
+cor(diamonds$ystar, diamonds$xstar)
+```
+
+This value indicates a very strong and positive linear association between price and carat.
+
+### Confidence Interval for Regression Coefficient
+
+```{r}
+## 95% CIs for all regression coefficients
+confint(diamonds_slr_xystar,level = 0.95)
+```
+
+The 95% CI for carat is (1.920152, 1.967888). We have 95% confidence that for each unit increase in diamond carat, the predicted price of diamond increases 8.52 to 8.54 (???)
+
+#### Visualization of CI for mean response given x and PI of response given x
+
+```{r}
+##regular scatterplot
+##with regression line overlaid, and bounds of CI for mean y
+
+diamonds %>%
+  ggplot(aes(x=xstar, y = ystar)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  labs(x = "Carat (log)",
+       y = "Price (log)",
+       title = "Scatterplot of Carat (log) against Price (log)")
+
+##find PIs for each observation
+preds <- predict(diamonds_slr_xystar, interval="prediction")
+
+
+diamonds <- data.frame(diamonds,preds)
+
+##overlay PIs via geom_line()
+
+diamonds %>%
+  ggplot(aes(x=xstar, y = ystar)) +
+  geom_point() +
+  geom_line(aes(y=lwr), color = "red", linetype = "dashed")+
+  geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+  geom_smooth(method = lm) +
+  labs(x = "Carat (log)",
+       y = "Price (log)",
+       title = "Scatterplot of Carat (log) against Price (log)")
+```
+
+## MLR Analysis
+
+```{r}
+##convert categorical predictor to factor with ordered levels
+
+diamonds <- diamonds %>%
+              mutate(color = factor(color, levels = c("K", "J", "I", "H", "G", "F", "E", "D")),
+                     clarity = factor(clarity),
+                     color_category = factor(color_category, levels = c("Faint", "Near Colorless", "Colorless")),
+                     clarity_category = factor(clarity_category,
+                                               levels = c("Included", 
+                                                         "Slightly Included", 
+                                                         "Very Slightly Included", 
+                                                         "Very Very Slightly Included", 
+                                                         "Internally Flawless", 
+                                                         "Flawless")),
+                     cut = factor(cut, levels = c("Good", "Very Good", "Ideal", "Astor Ideal")))
+```
+
+### Analysis of Diamond Color on Price and Carat
+
+```{r MLR Color}
+## scatterplot with separate regression lines
+diamonds %>%
+  ggplot(aes(x=xstar, y=ystar, color=color_category))+
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE)+
+  labs(title="Scatterplot of Diamond Carat (log transformed) and Price (log transformed) Relationship, by Color Category")
+
+# Model with additive effect of color category
+diamonds_carat_price_color_mlr <- lm(ystar~xstar+color_category, data=diamonds)
+summary(diamonds_carat_price_color_mlr)
+```
+
+#### ANOVA Linear F-test for Diamond Color
+
+```{r MLR Color: ANOVA F-Test}
+anova(diamonds_slr_xystar, lm(ystar~xstar+color_category, data=diamonds))
+```
+H0: The coefficients for levels of color are zero
+H1: At least one coefficient for color is not zero
+
+
+The p-value of for the model with color category being < 0.05 shows a statistically significant association between price and color for diamonds of the same carat size.
+
+#### Tukey's Procedure for Color Categories
+
+```{r MLR Color: Tukey}
+color_tukey <- multcomp::glht(lm(ystar~xstar+color_category, data=diamonds), linfct = mcp(color_category = "Tukey"))
+summary(color_tukey)
+plot(color_tukey)
+```
+H0: There is no difference in average price between the color classifications of the same carat size
+H1: There is a significant difference in average price between color classifications of the same carat size
+
+p-values for color classification pairings are <0.05, which allows us to conclude that for each pairing, there is a statistically significant difference in average price between color classifications for the same carat diamond size. 
+
+### Analysis of Diamond Clarity on Price and Carat
+
+```{r}
+##scatterplot with separate regression lines
+diamonds %>%
+  ggplot(aes(x=xstar, y=ystar, color=clarity_category))+
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE)+
+  labs(title="Scatterplot of Diamond Carat (log transformed) and Price (log transformed) Relationship, by Clarity Category")
+```
+
+```{r MLR Clarity}
+# Model with additive effect of clarity category
+diamonds_carat_price_clarity_mlr <- lm(ystar~xstar+clarity_category, data=diamonds)
+summary(diamonds_carat_price_clarity_mlr)
+```
+
+#### ANOVA Linear F-test for Diamond Clarity
+
+```{r MLR Clarity: ANOVA F-Test}
+anova(diamonds_slr_xystar, lm(ystar~xstar+clarity_category, data=diamonds))
+```
+H0: The coefficients for all levels of clarity are zero
+H1: At least one coefficient for clarity is not zero
+
+The p-value of for the model with clarity category being < 0.05 shows a statistically significant association between price and clarity for diamonds of the same carat size.
+
+```{r MLR Clarity: Tukey}
+clarity_tukey <- multcomp::glht(lm(ystar~xstar+clarity_category, data=diamonds), linfct = mcp(clarity_category = "Tukey"))
+summary(clarity_tukey)
+plot(clarity_tukey)
+```
+H0: There is no difference in average price between the clarity classifications of the same carat size
+H1: There is a significant difference in average price between clarity classifications of the same carat size
+
+p-values for clarity classification pairings are <0.05, which allows us to conclude that for each pairing, there is a statistically significant difference in average price between clarity classifications for the same carat diamond size. 
+
+### Analysis of Diamond Cut on Price and Carat
+
+```{r Scatterplot: Price, Carat, Cut}
+##scatterplot with separate regression lines
+diamonds %>%
+  ggplot(aes(x=xstar, y=ystar, color=cut))+
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE)+
+  labs(title="Scatterplot of Diamond Carat (log transformed) and Price (log transformed) Relationship, by Cut Category")
+```
+
+
+```{r MLR Cut}
+# Model with additive effect of color category
+diamonds_carat_price_cut_mlr <- lm(ystar~xstar+cut, data=diamonds)
+
+summary(diamonds_carat_price_cut_mlr)
+```
+
+#### ANOVA Linear F-test for Diamond Cut
+
+```{r MLR Cut: ANOVA F-Test}
+anova(lm(ystar~xstar, data=diamonds), lm(ystar~xstar*cut, data=diamonds))
+```
+H0: The coefficients for levels of cut are zero
+H1: At least one coefficient for cut is not zero
+
+With a p-value < 0.05, the null hypothesis can be rejected and conclude that at least one coefficient for diamond cut is not zero and can improve the model's ability to predict price. We can conclude that diamond cut, as a whole, has a statistically significant association with price, even after accounting for carat size.
+
+#### Tukey's Procedure for Cut Categories
+
+```{r MLR Cut: Tukey}
+cut_tukey <- multcomp::glht(diamonds_carat_price_cut_mlr, linfct = mcp(cut = "Tukey"))
+summary(cut_tukey)
+plot(cut_tukey)
+```
+H0: There is no difference in average price between the cuts of the same carat size
+H1: There is a significant difference in average price between cuts of the same carat size
+
+Tukey's procedure for evaluating diamond cuts on price for diamonds of the same carat size showed significant differences in Ideal & Good, Astor Ideal & Good, Ideal & Very Good, and Astor Ideal & Very Good pairs. Very Good & Good and Astor Ideal and & Ideal pairs did not have significant differences in price for diamonds of the same carat size. 
+
+
+
 
 
 ## Section 3
