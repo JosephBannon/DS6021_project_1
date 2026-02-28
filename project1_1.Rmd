@@ -46,6 +46,9 @@ Overall, the findings support Blue Nile’s claim that higher quality diamonds, 
 
 ## Section 2
 
+
+## Section 2
+
 ```{r Data Transformation, message=FALSE, warning=FALSE, include=FALSE}
 
 # group color and clarity categoricals
@@ -87,23 +90,11 @@ diamonds <- diamonds %>%
 summary(diamonds)
 ```
 
-Cut measures how well-proportioned a diamond’s dimensions are, including its balance and brilliance.
+The Blue Nile Diamond Dataset contains 1,214 observations of diamonds and its associated carat, clarity, color, cut, and price. A diamond's cut measures how well-proportioned a diamond’s dimensions are, including its balance and brilliance, and is considered the most important diamond characteristic regarding its value. Diamond color refers a diamond's absence of color and is classified as being colorless, near-colorless, and faint colored, with grades of color ranging from D (colorless) to K (faintly colored). The diamond that is more colorless is considered more valuable. Clarity assesses small imperfections within a diamond and have classifications of included, slightly included, very slightly included, very, very slightly included, internally flawless, and flawless diamonds. A diamond with fewer visible imperfections is considered more valuable. Lastly, a carat measures a diamond’s weight, not its size, and has the biggest effect on diamond price.
 
-Diamond color refers to how colorless a diamond is.
+From the data, diamonds are observed to have carat values ranging from 0.23 to 7, with a median value of 0.52 and mean value of 0.81. Diamond price values range from \$322 to \$355,403, with a median value of \$1,463.5 and mean value of \$7,056.7. The range of the numerical variables (carat and price) suggest the presence of outlier values that may skew values of central tendency. Two categorical variables (color category and clarity category) were created to further aggregate color and clarity classifications.
 
-Clarity assesses small imperfections within a diamond.
-
-Carat measures a diamond’s weight, not its size.
-
-Carat values range from 0.23 to 7, with a median value of 0.52 and mean value of 0.81.
-
-Price values range from 322 to 355403, with a median value of 1463.5 and mean value of 7056.7.
-
-The range of the numerical variables (carat and price) suggest the presence of outlier values that may skew values of central tendency. 
-
-Two categorical variables (color_category and clarity_category) were created grouping color and clarity values.
-
-### Visualizing the Distribution of Numerical Variables
+### Visualizing the Distribution of Diamond Price and Carat Weight
 
 ```{r Figure 1: Scatter and Density Plots for Diamond Price and Carat Weight, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -137,7 +128,7 @@ The scatter plot presented here illustrates a strong positive correlation betwee
 
 Density plots for both price and carat demonstrate a right skew indicating that the majority of the diamonds are lower priced and with lower carat weights. The long density tails extending to the right of plot are indicative of outlier diamonds that are rare and expensive. 
 
-### Visualizing the Distribution of Categorical Variables
+### Visualizing the Categorical Distribution of Diamond Cut, Clarity, and Color
 
 ```{r Figure 2: Barplots for Diamond Cut Clarity and Color, echo=FALSE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 bar_cut <- diamonds %>%
@@ -168,7 +159,15 @@ annotate_figure(ggarrange(bar_cut, bar_clarity, bar_color, ncol = 3, nrow = 1), 
 
 ```
 
-### Visualizing the Distrubution of Diamond Price by Cut, Color, and Clarity
+The bar plots presented display the frequency distribution of diamonds according to classifications of cut, clarity, and color. 
+
+In the data set, diamond cut is shown to be mostly comprised of ideal cut diamonds (n = 739) followed by very good (n = 382) diamonds, suggesting that most of the diamonds in this data set are of higher quality. The lowest cut grade is good cut diamonds which only consisted 73 diamonds in the data set and the premium Astor Ideal cut had the fewest number of diamonds with 20 being more reflective of its rarity. 
+
+For diamond clarity, the data set showed fairly even distribution of diamonds Blue Nile considers "best value" (slightly included) and "great value" (very slightly included) diamonds. The most frequently occurring clarity grade in the data set are slightly included SI1 (n = 243) and very slightly included VS1 and VS2 with 233 and 214 diamonds, respectively. This suggests that most of the diamonds in the data set are of good value and have clarity ratings that only show imperfections under magnification and are not visible to the naked eye, an indication of higher quality diamonds. 
+
+Lastly, the color bar plot shows that most of the diamonds in the data set are colorless or near colorless. Most of the diamonds had colorless classifications of F (n = 223) and D (n = 207), but E (n = 181) had the fewest of the colorless diamonds. Near colorless diamonds (G, H, I, and J) were less prevalent than colorless diamonds, and there were no faint (K) classified diamonds also in the data set, and indication that the data set contained good quality diamonds. 
+
+### Visualizing the Numeric Distrubution of Diamond Price by Cut, Color, and Clarity
 
 ```{r Figure 3: Boxplot Distribution of Price by Cut Color and Clarity, echo=FALSE, message=FALSE, warning=FALSE}
 box_price_cut <- ggplot(diamonds, aes(x = price, y = fct_reorder(cut, price, median))) +
@@ -189,7 +188,7 @@ box_price_clarity <- ggplot(diamonds, aes(x = price, y = fct_reorder(clarity_cat
                       labs(x = "Price (Log)", y = "Clarity") +
                       theme_bw()
 
-annotate_figure(ggarrange(box_price_cut, box_price_color, box_price_clarity, ncol = 1, nrow = 3), top = text_grob("Boxplot Distribution of Diamond Price by Cut, Color, and Clarity", face = "bold", size = 14))
+annotate_figure(ggarrange(box_price_cut, box_price_color, box_price_clarity, ncol = 1, nrow = 3), top = text_grob("Boxplot Distribution of Diamond Price by Cut, Color, and Clarity", face = "bold", size = 16))
 
 ```
 
@@ -201,37 +200,6 @@ When looking at diamond color, according to Blue Nile, "part of diamond valuatio
 
 Lastly, the distribution of prices among clarity grades shows that diamonds considered flawless are the most expensive, while distributions among other clarity classifications are similar. Outside of flawless diamonds, very slightly included and slightly included diamonds appear to have median prices that are slightly more expensive than internally flawless and very very slightly included diamonds. This observation supports Blue Nile's claim that Slightly Included and Very Slightly Included diamonds are good value diamonds. 
 
-```{r density plots: carat and price by categoricals, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-
-# carat + categorical density plots
-
-diamonds %>%
-ggplot(aes(x = carat, color = cut)) +
-  geom_density(linewidth = 0.75) 
-
-diamonds %>%
-ggplot(aes(x = carat, color = clarity)) +
-  geom_density(linewidth = 0.75)
-
-diamonds %>%
-ggplot(aes(x = carat, color = color)) +
-  geom_density(linewidth = 0.75)
-
-# price + categorical density plots
-
-diamonds %>%
-ggplot(aes(x = price, color = cut)) +
-  geom_density(linewidth = 0.75)
-
-diamonds %>%
-ggplot(aes(x = price, color = clarity)) +
-  geom_density(linewidth = 0.75)
-
-diamonds %>%
-ggplot(aes(x = price, color = color)) +
-  geom_density(linewidth = 0.75)
-```
-
 ```{r Figure 4: Scatterplot Distribution of Price vs Carat by Clarity and Color (Grouped by Cut), echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
 
 # carat vs price by cut, faceted by clarity
@@ -240,7 +208,7 @@ scatter_facet_color <- diamonds %>%
                             geom_point(aes(color = color_category)) +
                             geom_smooth(method = "lm", se=FALSE) +
                             facet_wrap(~cut) +
-                            labs(x = "Carat", y = "Price", title = "Color") +
+                            labs(x = "Carat", y = "Price", title = "Color", color = "Color Category") +
                             theme_bw() +
                             theme(legend.position = "bottom")
 
@@ -250,7 +218,7 @@ scatter_facet_clarity <- diamonds %>%
                           geom_point(aes(color = clarity_category)) +
                           geom_smooth(method = "lm", se=FALSE) +
                           facet_wrap(~cut) +
-                          labs(x = "Carat", y = "Price", title = "Clarity") +
+                          labs(x = "Carat", y = "Price", title = "Clarity", color = "Clarity Category") +
                           theme_bw() +
                           theme(legend.position = "bottom")
 
@@ -258,170 +226,15 @@ annotate_figure(ggarrange(scatter_facet_clarity, scatter_facet_color, ncol = 1, 
 
 ```
 
-The scatterplot distributions visualized provided added insight in the high median price values of good and very good diamond cuts in the data set. When looking at the clarity scatter plot, we can see very good cuts of diamonds having large carat values with one even having a flawless clarity rating, driving its high price point. Similarly, when looking at the color scatter plot, we can see the very good cuts of diamonds with higher carat weights having colorless classifications, also driving its value higher.  
+The scatterplot distributions visualized here attempt to control for diamond carat by plotting price against carat and separated by cut, with the top plot visualizing clarity grades and bottom visualizing color classifications. Across all grouping of diamond cut, we can see the strong positive relationship between carat weight and diamond price as well as a clustering of values around lower carat weights. This supports Blue Nile's claim that higher carat diamonds are rarer and more expensive than more frequent but less expensive lower carat diamonds. 
 
-```{r histograms: carat and price distribution, eval=FALSE, include=FALSE}
+Regarding diamond clarity, we see a higher prevalence of gold, green, blue, and purple dots at higher carat weights and higher prices. These dots represent diamond with clarity grades indicative of higher quality diamonds that are mostly absent of visible imperfections to the naked eye and their prices reflect these ratings. 
 
-# Looking at distribution of smaller carat diamonds (below average)
-diamonds %>% 
-  filter(carat <= median(carat)) %>%
-  ggplot(aes(x = carat)) +
-  geom_histogram(binwidth = 0.01)
+The color scatter plot attempts to illustrate diamond color across diamond carat, price, and cut. We can see that for all cuts, the blue/green dots reflecting colorless diamonds are mostly above the regression line, particularly at higher prices and heavier carat weights.
 
-# Looking at distribution of larger carat diamonds (above average)
-diamonds %>% 
-  filter(carat >= median(carat)) %>%
-  ggplot(aes(x = carat)) +
-  geom_histogram(binwidth = 0.10)
+Lastly, with both scatter plots grouped by cut, we can see that very good and ideal cut diamonds had the more outlier diamonds at higher prices and heavier carat weights when compared to good and Astor Ideal diamonds. 
 
-# Looking at distribution of diamond price (below median)
-diamonds %>% 
-  filter(price <= median(price)) %>%
-  ggplot(aes(x = price)) +
-  geom_histogram(binwidth = 10)
-
-# Looking at distribution of diamond price (above average)
-diamonds %>% 
-  filter(price >= median(price)) %>%
-  ggplot(aes(x = price)) +
-  geom_histogram(binwidth = 10000)
-```
-
-```{r categorical covariation plots, eval=FALSE, include=FALSE}
-diamonds %>% 
-  count(color, cut) %>%  
-  ggplot(aes(x = color, y = cut)) +
-  geom_tile(aes(fill = n))
-
-diamonds %>% 
-  count(cut, clarity_category) %>%  
-  ggplot(aes(x = cut, y = clarity_category)) +
-  geom_tile(aes(fill = n))
-
-diamonds %>% 
-  count(color_category, clarity_category) %>%  
-  ggplot(aes(x = color_category, y = clarity_category)) +
-  geom_tile(aes(fill = n))
-```
-
-```{r model diagnostics, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, include=FALSE}
-
-diamonds_slr <-lm(price~carat, data=diamonds)
-
-par(mfrow = c(2, 2))
-
-plot(diamonds_slr)
-
-MASS::boxcox(diamonds_slr, lambda = seq(-0.5, 0.5, 1/10))
-
-# Log transformation of y (price)
-diamonds <- diamonds %>%
-              mutate(ystar = log(price))
-
-diamonds_slr_ystar <-lm(ystar~carat, data=diamonds)
-par(mfrow = c(2, 2))
-plot(diamonds_slr_ystar)
-
-# log transformation of x (carat)
-
-diamonds <- diamonds %>%
-              mutate(xstar = log(carat))
-
-diamonds_slr_xystar <-lm(ystar~xstar, data=diamonds)
-par(mfrow = c(2, 2))
-plot(diamonds_slr_xystar)
-
-# SLR model
-summary(diamonds_slr_xystar)
-```
-
-```{r SLR: t-test, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-summary(diamonds_slr_xystar)
-```
-
-```{r Scatterplot: Carat Price Cut, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-##scatterplot with separate regression lines
-diamonds %>%
-  ggplot(aes(x=xstar, y=ystar, color=cut))+
-  geom_point()+
-  geom_smooth(method=lm, se=FALSE)+
-  labs(title="Scatterplot of Diamond Carat (log transformed) and Price (log transformed) Relationship, by Cut Category")
-```
-
-```{r MLR Cut: Model Summary, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-# Model with additive effect of color category
-diamonds_carat_price_cut_mlr <- lm(ystar~xstar+cut, data=diamonds)
-
-summary(diamonds_carat_price_cut_mlr)
-```
-
-```{r MLR Cut: ANOVA F-Test, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-
-# ANOVA Linear F-test for Diamond Cut
-anova(lm(ystar~xstar, data=diamonds), lm(ystar~xstar*cut, data=diamonds))
-```
-
-```{r MLR Cut: Tukey, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-cut_tukey <- multcomp::glht(diamonds_carat_price_cut_mlr, linfct = mcp(cut = "Tukey"))
-summary(cut_tukey)
-plot(cut_tukey)
-```
-
-```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, eval=FALSE}
-##scatterplot with separate regression lines
-diamonds %>%
-  ggplot(aes(x=xstar, y=ystar, color=clarity_category))+
-  geom_point()+
-  geom_smooth(method=lm, se=FALSE)+
-  labs(title="Scatterplot of Diamond Carat (log transformed) and Price (log transformed) Relationship, by Clarity Category")
-```
-
-```{r MLR Clarity: Model Summary, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-# Model with additive effect of clarity category
-diamonds_carat_price_clarity_mlr <- lm(ystar~xstar+clarity_category, data=diamonds)
-summary(diamonds_carat_price_clarity_mlr)
-```
-
-```{r MLR Clarity: ANOVA F-Test, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-anova(diamonds_slr_xystar, lm(ystar~xstar+clarity_category, data=diamonds))
-```
-
-```{r MLR Clarity: Tukey, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-clarity_tukey <- multcomp::glht(lm(ystar~xstar+clarity_category, data=diamonds), linfct = mcp(clarity_category = "Tukey"))
-summary(clarity_tukey)
-plot(clarity_tukey)
-```
-
-```{r Scatterplot: Price, message=FALSE, warning=FALSE, eval=FALSE, include=FALSE}
-##scatterplot with separate regression lines
-diamonds %>%
-  ggplot(aes(x=xstar, y=ystar, color=color_category))+
-  geom_point()+
-  geom_smooth(method=lm, se=FALSE)+
-  labs(title="Scatterplot of Diamond Carat (log transformed) and Price (log transformed) Relationship, by Color Category")
-```
-
-```{r MLR Color: Model Summary, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-
-# Model with additive effect of color category
-diamonds_carat_price_color_mlr <- lm(ystar~xstar+color_category, data=diamonds)
-summary(diamonds_carat_price_color_mlr)
-```
-
-```{r MLR Color: ANOVA F-Test, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-
-# ANOVA Linear F-test for Diamond Color
-
-anova(diamonds_slr_xystar, lm(ystar~xstar+color_category, data=diamonds))
-```
-
-```{r MLR Color: Tukey, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-
-# Tukey's Procedure for Color Categories
-color_tukey <- multcomp::glht(lm(ystar~xstar+color_category, data=diamonds), linfct = mcp(color_category = "Tukey"))
-summary(color_tukey)
-plot(color_tukey)
-```
+Overall, the scatter plots illustrate that when controlling for a carat weight, the better a diamond's cut, clarity, and color, the higher the diamond's price. 
 
 \newpage
 
