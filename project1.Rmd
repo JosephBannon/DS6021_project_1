@@ -1,5 +1,5 @@
 ---
-title: 'DS6021 Project 1: Blue Diamond Data Analysis'
+title: 'DS6021 Project 1: Blue Nile Diamond Data Analysis'
 author: "Andrew Tran, Shreya Dubey, Joseph Bannon"
 date: "`r Sys.Date()`"
 output:
